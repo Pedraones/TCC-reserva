@@ -1,0 +1,9 @@
+tcc/Assets/texture/5-dead-trees filter=lfs diff=lfs merge=lfs -text
+tcc/Assets/texture/600-year-old-dead-oak-ent-11 filter=lfs diff=lfs merge=lfs -text
+tcc/Assets/texture/dirty-ground-floor-01 filter=lfs diff=lfs merge=lfs -text
+tcc/Assets/texture/dry-grass filter=lfs diff=lfs merge=lfs -text
+tcc/Assets/texture/dry-realistic-grass-lods-1 filter=lfs diff=lfs merge=lfs -text
+tcc/Assets/texture/ground filter=lfs diff=lfs merge=lfs -text
+tcc/Assets/texture/rocky-ground filter=lfs diff=lfs merge=lfs -text
+tcc/Assets/texture/600-year-old-dead-oak-ent-11/source/model filter=lfs diff=lfs merge=lfs -text
+tcc/Assets/texture/600-year-old-dead-oak-ent-11/source/model.obj filter=lfs diff=lfs merge=lfs -text
