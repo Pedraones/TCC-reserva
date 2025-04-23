@@ -1,83 +1,107 @@
-using System;
+
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using System;
 
 public class Player : MonoBehaviour
 {
     [Header("PLAYER")]
     public CharacterController player;
     public Animator anim;
-    public float vel;
-    public float velRun;
+    public float velocidade;
+    public float velocidadeRun;
     private Vector3 Direcao;
 
     [Header("CAMERA")]
     public Transform camera;
-    private float velocidadeRotacao;
     public float suavizarCamera;
+    private float velocidadeRotacao;
 
+    [Header("PULO")]
+    public float alturaPulo;
+    public float gravidade = -19.62f;
+    private Vector3 forcaY;
+    public Transform Detector;
+    public LayerMask layerChao;
+    public bool estaNoChao;
 
+    // Correção do Pulo:
+    public bool tempoPulo;
+
+    // Método de detecção do chão
+    private void FixedUpdate()
+    {
+        estaNoChao = Physics.CheckSphere(Detector.position, 0.3f, layerChao);
+    }
 
     void Update()
     {
-        // Magnitude: mede o tamanho de um vetor.
-        // Move: é um método do CharacterController para mover um objeto
-        // Time.DeltaTime: garante que o movimento ou a ação seja constante e independente do FPS.
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        Direcao = new Vector3(horizontal, 0, vertical);
 
+        float visao = Mathf.Atan2(Direcao.x, Direcao.z) * Mathf.Rad2Deg + camera.eulerAngles.y;
+        float anglo = Mathf.SmoothDampAngle(transform.eulerAngles.y, visao, ref velocidadeRotacao, suavizarCamera);
 
-        float horizontal = Input.GetAxisRaw("Horizontal"); // Obtem o eixo horizontal(A, D)
-        float vertical = Input.GetAxisRaw("Vertical"); // Obtem o eixo vertical(W, S)
-        Direcao = new Vector3(horizontal, 0, vertical); // Obtem um Vector3 que x e z são controlados pelo jogador(WASD)
-
-        float visao = Mathf.Atan2(Direcao.x, Direcao.z) * Mathf.Rad2Deg + camera.eulerAngles.y; // Calcula o ângulo de direção:
-        float anglo = Mathf.SmoothDampAngle(transform.eulerAngles.y, visao, ref velocidadeRotacao, suavizarCamera); // Suaviza a rotação para transição suave
-
+        player.Move(forcaY * Time.deltaTime);
 
         Movimento(visao, anglo);
         Correr(visao, anglo);
+        Controle();
     }
 
-
-
-    // Método responsável pelo Movimento básico do personagem:
     private void Movimento(float visao, float anglo)
     {
-        if (Direcao.magnitude >= 0.1)
+        if (Direcao.magnitude >= 0.1f)
         {
-            // Aplica a rotação suavizada ao personagem:
             transform.rotation = Quaternion.Euler(0, anglo, 0);
-
-            // Calcula nova direção com rotação aplicada.
             Vector3 novaDirecao = Quaternion.Euler(0, visao, 0) * Vector3.forward;
-
-
-            /*          novaDirecao: É a direção utilizando o algorítimo de rotação acima.                 */
-            player.Move(novaDirecao * vel * Time.deltaTime); // Move o jogador com base na velocidade
-            anim.SetBool("Andar", true); // Determina se a animação(1°p - nome_Parametro) esta ativada ou não(2°p - bool).
+            player.Move(novaDirecao * velocidade * Time.deltaTime);
+            anim.SetBool("Andar", true);
         }
-
-
         else
         {
             anim.SetBool("Andar", false);
         }
     }
 
-
     private void Correr(float visao, float anglo)
     {
-        if (Input.GetKey(KeyCode.LeftShift) && Direcao.magnitude >= 0.1f)
+        if (Direcao.magnitude > 0.1 && Input.GetKey(KeyCode.LeftShift))
         {
             transform.rotation = Quaternion.Euler(0, anglo, 0);
-
             Vector3 novaDirecao = Quaternion.Euler(0, visao, 0) * Vector3.forward;
-
-            player.Move(novaDirecao * velRun * Time.deltaTime);
+            player.Move(novaDirecao * velocidadeRun * Time.deltaTime);
             anim.SetBool("Correr", true);
         }
-
         else
         {
             anim.SetBool("Correr", false);
+        }
+    }
+
+    public void TempoPulo(bool liberarPulo)
+    {
+        tempoPulo = liberarPulo;
+    }
+
+    private void Controle()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) & estaNoChao == true & tempoPulo == false)
+        {
+            anim.SetBool("Pular", true);
+            forcaY.y = Mathf.Sqrt(alturaPulo * -2 * gravidade);
+        }
+        else
+        {
+            forcaY.y += gravidade * Time.deltaTime;
+            anim.SetBool("Pular", false);
+
+            if (forcaY.y < 0 && estaNoChao)
+            {
+                forcaY.y = -6f;
+            }
         }
     }
 }
