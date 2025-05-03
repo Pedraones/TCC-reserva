@@ -9,13 +9,13 @@ public class Player1Pessoa : MonoBehaviour
     public LayerMask cenario;
 
     public float gravidade, alturaPulo, verticalVel;
-    private bool estaNoChao;
+    private bool estaNoChao, pulou;
 
     [Range(0f, 50f)]
     public float velAndar;
 
     [Range(0f, 50f)]
-    public float velCorrer, velPulando;
+    public float velCorrer;
 
     private float velAtual;
 
@@ -29,11 +29,6 @@ public class Player1Pessoa : MonoBehaviour
     {
         Movimentacao();
         Pulo();
-
-        Vector3 movimentoFinal = playerInput * velAtual;
-        movimentoFinal.y = verticalVel;
-
-        controller.Move(movimentoFinal * Time.deltaTime);
     }
 
     private void Movimentacao()
@@ -49,24 +44,18 @@ public class Player1Pessoa : MonoBehaviour
         velAtual = correndo ? velCorrer : velAndar;
 
         ChecarAnimacoes(correndo, playerInput);
+
+        controller.Move(playerInput * velAtual * Time.deltaTime);
     }
 
     private void Pulo()
     {
-        //checar se esta no chão
         estaNoChao = Physics.CheckSphere(detector.position, 0.3f, cenario);
-        velAtual = estaNoChao ? velAtual : velPulando;
 
-        //aplica pulo de acordo com a altura do pulo
         if (Input.GetKeyDown(KeyCode.Space) && estaNoChao)
         {
             verticalVel = Mathf.Sqrt(-2f * alturaPulo * gravidade);
             animator.SetTrigger("Pular");
-        }
-
-        if (!estaNoChao && verticalVel < -4)
-        {
-            animator.CrossFade("Falling To Landing", 0.1f);
         }
 
         if (estaNoChao && verticalVel < 0)
@@ -74,8 +63,9 @@ public class Player1Pessoa : MonoBehaviour
             verticalVel = -1f;
         }
 
-        //aplica gravidade constantemente
         verticalVel += gravidade * Time.deltaTime;
+
+        controller.Move(new Vector3(0f, verticalVel, 0f) * Time.deltaTime);
 
         animator.SetBool("noChao", true);
     }
